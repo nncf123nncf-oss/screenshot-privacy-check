@@ -1,0 +1,779 @@
+[
+ {
+  "file": "s1_sc75.png",
+  "set": "s1",
+  "cond": "sc75",
+  "rows": [
+   {
+    "label": "メール",
+    "value": "taro@example.com",
+    "kind": "email",
+    "bbox": [
+     63,
+     15,
+     177,
+     27
+    ]
+   },
+   {
+    "label": "連絡先",
+    "value": "info-test@example.co.jp",
+    "kind": "email",
+    "bbox": [
+     63,
+     41,
+     207,
+     53
+    ]
+   },
+   {
+    "label": "返信先",
+    "value": "a.b+c@sub.example.com",
+    "kind": "email",
+    "bbox": [
+     63,
+     67,
+     213,
+     79
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s1_sc60jpg.jpg",
+  "set": "s1",
+  "cond": "sc60jpg",
+  "rows": [
+   {
+    "label": "メール",
+    "value": "taro@example.com",
+    "kind": "email",
+    "bbox": [
+     51,
+     12,
+     142,
+     21
+    ]
+   },
+   {
+    "label": "連絡先",
+    "value": "info-test@example.co.jp",
+    "kind": "email",
+    "bbox": [
+     51,
+     33,
+     165,
+     42
+    ]
+   },
+   {
+    "label": "返信先",
+    "value": "a.b+c@sub.example.com",
+    "kind": "email",
+    "bbox": [
+     51,
+     54,
+     171,
+     63
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s1_sc50jpg.jpg",
+  "set": "s1",
+  "cond": "sc50jpg",
+  "rows": [
+   {
+    "label": "メール",
+    "value": "taro@example.com",
+    "kind": "email",
+    "bbox": [
+     42,
+     10,
+     118,
+     18
+    ]
+   },
+   {
+    "label": "連絡先",
+    "value": "info-test@example.co.jp",
+    "kind": "email",
+    "bbox": [
+     42,
+     27,
+     138,
+     35
+    ]
+   },
+   {
+    "label": "返信先",
+    "value": "a.b+c@sub.example.com",
+    "kind": "email",
+    "bbox": [
+     42,
+     45,
+     142,
+     53
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s2_sc75.png",
+  "set": "s2",
+  "cond": "sc75",
+  "rows": [
+   {
+    "label": "携帯",
+    "value": "090-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     51,
+     15,
+     144,
+     24
+    ]
+   },
+   {
+    "label": "固定",
+    "value": "03-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     51,
+     42,
+     137,
+     51
+    ]
+   },
+   {
+    "label": "フリーダイヤル",
+    "value": "0120-000-000",
+    "kind": "phone",
+    "bbox": [
+     111,
+     68,
+     197,
+     77
+    ]
+   },
+   {
+    "label": "ハイフンなし",
+    "value": "09000000000",
+    "kind": "phone",
+    "bbox": [
+     99,
+     94,
+     182,
+     103
+    ]
+   },
+   {
+    "label": "全角",
+    "value": "０９０－００００－０００１",
+    "kind": "phone",
+    "bbox": [
+     51,
+     120,
+     207,
+     129
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s2_sc60jpg.jpg",
+  "set": "s2",
+  "cond": "sc60jpg",
+  "rows": [
+   {
+    "label": "携帯",
+    "value": "090-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     41,
+     12,
+     115,
+     19
+    ]
+   },
+   {
+    "label": "固定",
+    "value": "03-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     41,
+     33,
+     109,
+     40
+    ]
+   },
+   {
+    "label": "フリーダイヤル",
+    "value": "0120-000-000",
+    "kind": "phone",
+    "bbox": [
+     89,
+     54,
+     157,
+     61
+    ]
+   },
+   {
+    "label": "ハイフンなし",
+    "value": "09000000000",
+    "kind": "phone",
+    "bbox": [
+     79,
+     75,
+     145,
+     82
+    ]
+   },
+   {
+    "label": "全角",
+    "value": "０９０－００００－０００１",
+    "kind": "phone",
+    "bbox": [
+     41,
+     96,
+     166,
+     103
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s2_sc50jpg.jpg",
+  "set": "s2",
+  "cond": "sc50jpg",
+  "rows": [
+   {
+    "label": "携帯",
+    "value": "090-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     34,
+     10,
+     96,
+     16
+    ]
+   },
+   {
+    "label": "固定",
+    "value": "03-0000-0000",
+    "kind": "phone",
+    "bbox": [
+     34,
+     28,
+     91,
+     34
+    ]
+   },
+   {
+    "label": "フリーダイヤル",
+    "value": "0120-000-000",
+    "kind": "phone",
+    "bbox": [
+     74,
+     45,
+     131,
+     51
+    ]
+   },
+   {
+    "label": "ハイフンなし",
+    "value": "09000000000",
+    "kind": "phone",
+    "bbox": [
+     66,
+     63,
+     121,
+     69
+    ]
+   },
+   {
+    "label": "全角",
+    "value": "０９０－００００－０００１",
+    "kind": "phone",
+    "bbox": [
+     34,
+     80,
+     138,
+     86
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s3_sc75.png",
+  "set": "s3",
+  "cond": "sc75",
+  "rows": [
+   {
+    "label": "郵便",
+    "value": "〒000-0000",
+    "kind": "zip",
+    "bbox": [
+     51,
+     15,
+     121,
+     24
+    ]
+   },
+   {
+    "label": "郵便(記号なし)",
+    "value": "000-0000",
+    "kind": "zip",
+    "bbox": [
+     110,
+     42,
+     168,
+     51
+    ]
+   },
+   {
+    "label": "URL",
+    "value": "https://example.com/a?b=1",
+    "kind": "url",
+    "bbox": [
+     51,
+     67,
+     219,
+     79
+    ]
+   },
+   {
+    "label": "サイト",
+    "value": "www.example.com",
+    "kind": "url",
+    "bbox": [
+     63,
+     93,
+     175,
+     105
+    ]
+   },
+   {
+    "label": "カード",
+    "value": "4111 1111 1111 1111",
+    "kind": "card",
+    "bbox": [
+     63,
+     120,
+     195,
+     129
+    ]
+   },
+   {
+    "label": "カード2",
+    "value": "4111-1111-1111-1111",
+    "kind": "card",
+    "bbox": [
+     71,
+     147,
+     207,
+     156
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s3_sc60jpg.jpg",
+  "set": "s3",
+  "cond": "sc60jpg",
+  "rows": [
+   {
+    "label": "郵便",
+    "value": "〒000-0000",
+    "kind": "zip",
+    "bbox": [
+     41,
+     12,
+     97,
+     19
+    ]
+   },
+   {
+    "label": "郵便(記号なし)",
+    "value": "000-0000",
+    "kind": "zip",
+    "bbox": [
+     88,
+     33,
+     134,
+     40
+    ]
+   },
+   {
+    "label": "URL",
+    "value": "https://example.com/a?b=1",
+    "kind": "url",
+    "bbox": [
+     41,
+     54,
+     175,
+     63
+    ]
+   },
+   {
+    "label": "サイト",
+    "value": "www.example.com",
+    "kind": "url",
+    "bbox": [
+     51,
+     75,
+     140,
+     84
+    ]
+   },
+   {
+    "label": "カード",
+    "value": "4111 1111 1111 1111",
+    "kind": "card",
+    "bbox": [
+     51,
+     96,
+     156,
+     103
+    ]
+   },
+   {
+    "label": "カード2",
+    "value": "4111-1111-1111-1111",
+    "kind": "card",
+    "bbox": [
+     57,
+     117,
+     165,
+     124
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s3_sc50jpg.jpg",
+  "set": "s3",
+  "cond": "sc50jpg",
+  "rows": [
+   {
+    "label": "郵便",
+    "value": "〒000-0000",
+    "kind": "zip",
+    "bbox": [
+     34,
+     10,
+     81,
+     16
+    ]
+   },
+   {
+    "label": "郵便(記号なし)",
+    "value": "000-0000",
+    "kind": "zip",
+    "bbox": [
+     73,
+     28,
+     112,
+     34
+    ]
+   },
+   {
+    "label": "URL",
+    "value": "https://example.com/a?b=1",
+    "kind": "url",
+    "bbox": [
+     34,
+     45,
+     146,
+     53
+    ]
+   },
+   {
+    "label": "サイト",
+    "value": "www.example.com",
+    "kind": "url",
+    "bbox": [
+     42,
+     62,
+     117,
+     70
+    ]
+   },
+   {
+    "label": "カード",
+    "value": "4111 1111 1111 1111",
+    "kind": "card",
+    "bbox": [
+     42,
+     80,
+     130,
+     86
+    ]
+   },
+   {
+    "label": "カード2",
+    "value": "4111-1111-1111-1111",
+    "kind": "card",
+    "bbox": [
+     47,
+     98,
+     138,
+     104
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s4_sc75.png",
+  "set": "s4",
+  "cond": "sc75",
+  "rows": [
+   {
+    "label": "日付",
+    "value": "2026年10月18日",
+    "kind": null,
+    "bbox": [
+     51,
+     14,
+     147,
+     26
+    ]
+   },
+   {
+    "label": "日付2",
+    "value": "2026-10-18",
+    "kind": null,
+    "bbox": [
+     59,
+     42,
+     129,
+     51
+    ]
+   },
+   {
+    "label": "金額",
+    "value": "1,234,567円",
+    "kind": null,
+    "bbox": [
+     51,
+     68,
+     125,
+     79
+    ]
+   },
+   {
+    "label": "金額2",
+    "value": "12,345,000円",
+    "kind": null,
+    "bbox": [
+     59,
+     94,
+     140,
+     105
+    ]
+   },
+   {
+    "label": "版",
+    "value": "v1.2.3",
+    "kind": null,
+    "bbox": [
+     39,
+     120,
+     78,
+     129
+    ]
+   },
+   {
+    "label": "数字",
+    "value": "2026",
+    "kind": null,
+    "bbox": [
+     51,
+     147,
+     81,
+     156
+    ]
+   },
+   {
+    "label": "時刻",
+    "value": "10:30",
+    "kind": null,
+    "bbox": [
+     51,
+     173,
+     87,
+     182
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s4_sc60jpg.jpg",
+  "set": "s4",
+  "cond": "sc60jpg",
+  "rows": [
+   {
+    "label": "日付",
+    "value": "2026年10月18日",
+    "kind": null,
+    "bbox": [
+     41,
+     11,
+     118,
+     21
+    ]
+   },
+   {
+    "label": "日付2",
+    "value": "2026-10-18",
+    "kind": null,
+    "bbox": [
+     47,
+     33,
+     103,
+     40
+    ]
+   },
+   {
+    "label": "金額",
+    "value": "1,234,567円",
+    "kind": null,
+    "bbox": [
+     41,
+     54,
+     100,
+     63
+    ]
+   },
+   {
+    "label": "金額2",
+    "value": "12,345,000円",
+    "kind": null,
+    "bbox": [
+     47,
+     75,
+     112,
+     84
+    ]
+   },
+   {
+    "label": "版",
+    "value": "v1.2.3",
+    "kind": null,
+    "bbox": [
+     31,
+     96,
+     62,
+     103
+    ]
+   },
+   {
+    "label": "数字",
+    "value": "2026",
+    "kind": null,
+    "bbox": [
+     41,
+     117,
+     65,
+     124
+    ]
+   },
+   {
+    "label": "時刻",
+    "value": "10:30",
+    "kind": null,
+    "bbox": [
+     41,
+     138,
+     69,
+     145
+    ]
+   }
+  ]
+ },
+ {
+  "file": "s4_sc50jpg.jpg",
+  "set": "s4",
+  "cond": "sc50jpg",
+  "rows": [
+   {
+    "label": "日付",
+    "value": "2026年10月18日",
+    "kind": null,
+    "bbox": [
+     34,
+     9,
+     98,
+     17
+    ]
+   },
+   {
+    "label": "日付2",
+    "value": "2026-10-18",
+    "kind": null,
+    "bbox": [
+     39,
+     28,
+     86,
+     34
+    ]
+   },
+   {
+    "label": "金額",
+    "value": "1,234,567円",
+    "kind": null,
+    "bbox": [
+     34,
+     45,
+     83,
+     53
+    ]
+   },
+   {
+    "label": "金額2",
+    "value": "12,345,000円",
+    "kind": null,
+    "bbox": [
+     39,
+     63,
+     93,
+     70
+    ]
+   },
+   {
+    "label": "版",
+    "value": "v1.2.3",
+    "kind": null,
+    "bbox": [
+     26,
+     80,
+     52,
+     86
+    ]
+   },
+   {
+    "label": "数字",
+    "value": "2026",
+    "kind": null,
+    "bbox": [
+     34,
+     98,
+     54,
+     104
+    ]
+   },
+   {
+    "label": "時刻",
+    "value": "10:30",
+    "kind": null,
+    "bbox": [
+     34,
+     115,
+     58,
+     121
+    ]
+   }
+  ]
+ }
+]

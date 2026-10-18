@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>スクショ見張り番</title>
+<meta name="description" content="スクショを読み込むと、メール・電話番号・郵便番号・URL・長い数字らしい文字に赤枠を付けます。塗りつぶしかぼかしで隠した画像を保存できます。画像は端末の中だけで処理します。">
+<style>
+  :root {
+    --bg: #f4f7f1; --surface: #ffffff; --ink: #1c2419; --ink2: #36402f; --ink3: #4f5a47;
+    --line: #d3dccb; --line-strong: #6f7d63; --accent: #3F7D3A; --accent-ink: #ffffff; --accent-soft: #e2eedd;
+    --danger: #C21B1B; --danger-soft: #fbe6e6; --manual: #1558B0; --warn-bg: #fff3cf; --warn-ink: #4d3200; --warn-line: #8a5a00;
+    --font: "Hiragino Sans","Yu Gothic","BIZ UDPGothic","Noto Sans JP",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141a12; --surface: #1d2619; --ink: #eaf3e5; --ink2: #cfdcc7; --ink3: #adbda3;
+      --line: #36432f; --line-strong: #7f9173; --accent: #9CD08F; --accent-ink: #10200c; --accent-soft: #2c3d27;
+      --danger: #FF8A80; --danger-soft: #4a2323; --manual: #8EC1FF; --warn-bg: #4a3a0c; --warn-ink: #ffe9b0; --warn-line: #e0b34a;
+    }
+    :root:not([data-theme="light"]) .row .num { color: #1a0a0a; }
+    :root:not([data-theme="light"]) .row.off .num { color: #10160d; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.6; }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 32px; }
+  h1 { font-size: 22px; line-height: 1.3; margin: 8px 0 8px; }
+  h2 { font-size: 17px; line-height: 1.4; margin: 0 0 8px; }
+  p { margin: 0 0 8px; }
+  .lead { color: var(--ink2); }
+  .notice { margin: 0 0 12px; padding: 10px 12px; list-style: none; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: 6px; font-size: 15px; line-height: 1.6; }
+  .notice li { margin: 0 0 2px; } .notice li:last-child { margin: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 12px; min-width: 0; }
+  .pick { display: flex; flex-direction: column; gap: 6px; }
+  .pick label { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 8px 12px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-weight: 700; cursor: pointer; text-align: center; }
+  .pick input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+  .pick input[type=file]:focus-visible + label, button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .small { font-size: 14px; color: var(--ink3); margin: 0; }
+  .status { margin: 8px 0 0; min-height: 48px; font-size: 15px; color: var(--ink2); overflow-wrap: anywhere; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; display: none; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .tools { display: grid; grid-template-columns: 1fr; grid-template-areas: "mode" "undo"; gap: 8px; margin: 0 0 8px; }
+  .tools .t-mode { grid-area: mode; } .tools .t-undo { grid-area: undo; }
+  button { font: inherit; min-height: 44px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; width: 100%; }
+  .stage { position: relative; width: 100%; border: 1px dashed var(--line-strong); border-radius: 6px; background: var(--bg); min-height: 120px; overflow: hidden; }
+  .stage .empty { padding: 28px 12px; text-align: center; color: var(--ink3); }
+  #view { display: none; width: 100%; height: auto; touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
+  #view.manual { touch-action: none; cursor: crosshair; outline: 3px solid var(--manual); outline-offset: -3px; }
+  .list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+  .row { display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-areas: "num head" "num seg"; gap: 4px 8px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  .row .num { grid-area: num; width: 30px; height: 30px; border-radius: 50%; background: var(--danger); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .row.manual-row .num { background: var(--manual); }
+  .row.off .num { background: #5a6850; color: #fff; }
+  .row .head { grid-area: head; min-width: 0; }
+  .row .kind { font-size: 14px; color: var(--ink3); }
+  .row .txt { font-family: ui-monospace, Consolas, monospace; font-size: 15px; overflow-wrap: anywhere; word-break: break-all; }
+  .row .seg { grid-area: seg; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .row .seg.has-del { grid-template-columns: 1fr 1fr auto; }
+  .opts { display: grid; grid-template-columns: 1fr; gap: 6px; margin: 8px 0; }
+  .opts label { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); }
+  .opts input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .count { font-weight: 700; margin: 8px 0; overflow-wrap: anywhere; }
+  .res-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 6px; background: repeating-conic-gradient(#8883 0 25%, #0000 0 50%) 0 0 / 16px 16px; }
+  .res-wrap img { display: block; max-width: 100%; height: auto; }
+  .res-wrap.full img { max-width: none; }
+  .actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+  a.btn { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line-strong); color: var(--ink); text-decoration: none; background: var(--surface); }
+  .seen { margin: 0; padding-left: 20px; } .seen li { margin: 0 0 4px; }
+  .mw-footer { box-sizing: border-box; width: 100%; max-width: 100%; margin: 24px 0 0; padding: 16px; background: #F7F7F8;
+    border: 1px solid #D8D8DC; border-radius: 6px; color: #3A3A3E; font-family: system-ui, sans-serif; font-size: 12px; line-height: 1.7; }
+  .mw-footer p { margin: 0 0 6px; } .mw-footer p:last-child { margin-bottom: 0; } .mw-footer a { color: #0B5AA6; display: inline-block; padding: 13px 0; }
+  .layout { display: block; }
+  @media (min-width: 880px) {
+    main { padding: 24px 16px 40px; }
+    h1 { font-size: 24px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+    .a-ctl { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+    .tools { grid-template-columns: 1fr 1fr; grid-template-areas: "mode undo"; }
+    .opts { grid-template-columns: 1fr 1fr; }
+    .actions { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>スクショ見張り番</h1>
+  <p class="lead">スクショを読み込むと、写っている文字をこの画面の中で読み取り、メール・電話番号・郵便番号・URL・長い数字らしい箇所に赤枠を付けます。塗りつぶしかぼかしで隠した画像を保存できます。</p>
+  <ul class="notice" aria-label="先に読んでください">
+    <li>自動検出は完全ではありません。投稿前に目で確認してください。</li>
+    <li>氏名・住所は見つけにくいです。写っていないか自分の目でも確認してください。</li>
+    <li>画像はこのページの中（お使いの端末のブラウザ）だけで処理し、送信しません。</li>
+  </ul>
+
+  <div class="layout">
+    <section class="a-view" aria-label="画像と赤枠">
+      <div class="card pick">
+        <input id="file" type="file" accept="image/*">
+        <label for="file" id="fileLabel">画像を選ぶ</label>
+        <p class="small" id="loadNote">画像を選んだあとに、文字認識のデータ（日本語。初回は約6MB）を読み込みます。画像ではなく、プログラムとデータです。以後はブラウザのキャッシュに残ることがあります。</p>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="bar" id="bar" aria-hidden="true"><i id="barFill"></i></div>
+      </div>
+      <div class="card">
+        <div class="tools">
+          <button type="button" class="t-mode" id="manualBtn" aria-pressed="false" disabled>なぞって隠す箇所を足す: OFF</button>
+          <button type="button" class="t-undo" id="undoBtn" disabled>直前に足した箇所を取り消す</button>
+        </div>
+        <p class="small" id="manualHint">ONにすると、画像の上を指やマウスでなぞって四角を足せます。OFFのあいだは通常どおりスクロールできます。</p>
+        <div class="stage" id="stage">
+          <div class="empty" id="empty">画像を選ぶと、ここに赤枠つきで表示します。</div>
+          <canvas id="view" aria-label="読み込んだ画像。赤枠が隠す候補の位置"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="a-ctl" aria-label="候補と保存">
+      <div class="card">
+        <h2>隠す候補 <span id="candCount" class="small"></span></h2>
+        <p class="small">一覧の文字は先頭と末尾以外を伏せて表示しています。誤って拾った箇所は「隠さない」にできます。</p>
+        <ul class="list" id="list"><li class="small">画像を選ぶと、ここに候補が出ます。</li></ul>
+      </div>
+      <div class="card">
+        <h2>隠し方</h2>
+        <div class="opts" role="radiogroup" aria-label="隠し方">
+          <label><input type="radio" name="mode" value="fill" checked> 塗りつぶし（黒）</label>
+          <label><input type="radio" name="mode" value="blur"> ぼかし</label>
+        </div>
+        <p class="count" id="hideCount">自動で隠した箇所は0個です。ここに入っていない文字が残っている可能性があります。</p>
+        <p class="small">自動検出は完全ではありません。氏名・住所は見つけにくいです。保存前に、画像全体を目で確認してください。</p>
+        <div class="actions">
+          <button type="button" class="primary" id="saveBtn" disabled>隠した画像を保存</button>
+        </div>
+        <p class="small" id="saveMsg" role="status" aria-live="polite"></p>
+      </div>
+      <div class="card" id="resultCard" hidden>
+        <h2>隠した画像（保存前の確認）</h2>
+        <p class="small" id="resultNote">保存前に、画像全体を目で確認してください。</p>
+        <div class="res-wrap" id="resWrap"><img id="resultImg" alt="隠した結果の画像"></div>
+        <div class="actions">
+          <button type="button" id="zoomBtn" aria-pressed="false">実寸で見る</button>
+          <a class="btn" id="dlLink" download="masked.png" hidden>PNGファイルとしてダウンロード</a>
+        </div>
+        <p class="small" id="longpress" hidden>画像を長押しして「写真に追加」または「画像を保存」を選んでください。</p>
+      </div>
+      <div class="card">
+        <h2>見ているもの・見ないもの</h2>
+        <ul class="seen">
+          <li>見ているもの: 画像に写っている文字を読み取り、メール・電話番号・郵便番号・URL・13桁以上の数字の形に合う箇所を候補にします。</li>
+          <li>見ないもの: 氏名・住所・会社名・アカウント名・顔・QRコードは探しません。小さい文字・薄い文字・装飾した文字は読み取れないことがあります。長辺が2400pxを超える画像は縮めて読み取るため、小さい文字は特に取りこぼしやすくなります。</li>
+          <li>拾いにくい書き方: 国際表記の電話番号（+81）・括弧つきの電話番号・(at)で書き換えたメール・2行にまたがるURL。</li>
+          <li>保存する画像はPNGです。保存後に隠す前の状態へ戻す機能はありません。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <footer class="mw-footer">
+    <p>みちAIワークス（MICHI AI WORKS）／代表 田中　泉</p>
+    <p>運営: <a href="https://michi-portfolio.vercel.app/" rel="noopener">みちAIワークス 公式サイト</a>（https://michi-portfolio.vercel.app/ ）／ お問い合わせ: <a href="mailto:nncf123nncf@gmail.com">nncf123nncf@gmail.com</a></p>
+    <p>選んだ画像と読み取った文字は、このページの中（お使いの端末のブラウザ）だけで処理し、サーバーには送信せず、保存もしません。ページを閉じると消えます。アクセス解析（Cloudflare Web Analytics）で、ページの閲覧状況（閲覧数・参照元・ブラウザの種類など）を計測しています。画像と読み取った文字は送信しません。</p>
+    <p>文字の読み取りには、このページに同梱した文字認識プログラム（Tesseract.js・Apache-2.0）を、端末の中だけで動かしています。画像と読み取った文字について、外部のサービスは使っていません（閲覧数の計測を除く）。</p>
+    <p>候補は文字の形による目安です。取りこぼしや誤りがあります。ログイン・会員登録・パスワードの入力を求めることはありません。</p>
+  </footer>
+</main>
+
+<script id="core">
+/* 検出・正規化・ぼかし・端末の見分け(画面を使わない)。source/run-checks.js がここだけを取り出して検算する */
+var SP = (function () {
+  'use strict';
+  var HY = 'ー-−‐‑‒–—―一─━﹣';
+  var LOOKALIKE = '⑳©Ⓐⓐ';
+  function isDigit(c) { return c >= '0' && c <= '9'; }
+
+  /* 元の文字列を1文字ずつ正規化。a[i]/b[i]=正規化後のi文字目が対応する元の範囲[a,b) */
+  function normalize(str) {
+    var s = [], a = [], b = [], weak = [], i = 0, n = str.length;
+    while (i < n) {
+      var rest = str.substr(i, 3), low = rest.toLowerCase();
+      if (low === '(a)' || low === '(@)') { s.push('@'); a.push(i); b.push(i + 3); weak.push(true); i += 3; continue; }
+      if (str.substr(i, 4).toLowerCase() === '[at]') { s.push('@'); a.push(i); b.push(i + 4); weak.push(true); i += 4; continue; }
+      var c = str.charAt(i);
+      if (LOOKALIKE.indexOf(c) >= 0) { s.push('@'); a.push(i); b.push(i + 1); weak.push(true); i++; continue; }
+      var cp = str.codePointAt(i), len = cp > 0xFFFF ? 2 : 1, ch = str.substr(i, len);
+      var nf = ch.normalize('NFKC');
+      for (var k = 0; k < nf.length; k++) { s.push(nf.charAt(k)); a.push(i); b.push(i + len); weak.push(false); }
+      i += len;
+    }
+    /* 数字のそばの長音・ハイフン類だけを半角ハイフンへ(文中の「ー」を巻き込まない) */
+    for (var j = 0; j < s.length; j++) {
+      if (HY.indexOf(s[j]) < 0) continue;
+      var p = j - 1; while (p >= 0 && s[p] === ' ') p--;
+      var q = j + 1; while (q < s.length && s[q] === ' ') q++;
+      if ((p >= 0 && isDigit(s[p])) || (q < s.length && isDigit(s[q]))) s[j] = '-';
+    }
+    return { s: s.join(''), a: a, b: b, weak: weak };
+  }
+
+  function luhn(digits) {
+    var sum = 0, alt = false;
+    for (var i = digits.length - 1; i >= 0; i--) {
+      var d = digits.charCodeAt(i) - 48; if (alt) { d *= 2; if (d > 9) d -= 9; } sum += d; alt = !alt;
+    }
+    return digits.length > 0 && sum % 10 === 0;
+  }
+  function digitsOf(t) { return t.replace(/\D/g, ''); }
+
+  var TLD = '(?:co\\.jp|ne\\.jp|or\\.jp|ac\\.jp|go\\.jp|com|net|org|jp|io|info|biz|dev|app|me|co)';
+  /* テキスト1行から候補[{kind, s, e}]を返す。s,eは元の文字列の位置 */
+  function findCandidates(text) {
+    var N = normalize(text), s = N.s, out = [];
+    /* 重なった候補は捨てず、外側の範囲にまとめる(URLの途中の数字・メールが原因で、URLの残りが隠れずに残るのを防ぐ) */
+    var raw = [];
+    function add(kind, ns, ne, extra) {
+      if (ne <= ns) return;
+      var o = { kind: kind, ns: ns, ne: ne };
+      if (extra) for (var k in extra) o[k] = extra[k];
+      raw.push(o);
+    }
+    var re, m;
+    /* 長い数字(カード番号など) */
+    re = /(?:\d[- ]?){12,}\d/g;
+    while ((m = re.exec(s))) {
+      var dg = digitsOf(m[0]);
+      if (dg.length >= 13) add('card', m.index, m.index + m[0].length, { luhn: dg.length <= 19 && luhn(dg) });
+    }
+    /* 電話(10〜11桁・0始まり) */
+    re = /0\d{1,4}[- ]{0,3}\d{1,4}[- ]{0,3}\d{3,4}/g;
+    while ((m = re.exec(s))) {
+      var d2 = digitsOf(m[0]), prev = s.charAt(m.index - 1), nxt = s.charAt(m.index + m[0].length);
+      if (d2.length < 10 || d2.length > 11) continue;
+      if (isDigit(prev) || isDigit(nxt)) continue;
+      add('phone', m.index, m.index + m[0].length);
+    }
+    /* 電話(桁ごとに空白が入って読み取られた場合) */
+    re = /0(?:[- ]{0,3}\d){9,10}/g;
+    while ((m = re.exec(s))) {
+      var d3 = digitsOf(m[0]), pv = s.charAt(m.index - 1), nx = s.charAt(m.index + m[0].length);
+      if (d3.length < 10 || d3.length > 11 || isDigit(pv) || isDigit(nx)) continue;
+      add('phone', m.index, m.index + m[0].length);
+    }
+    /* メール */
+    re = /[A-Za-z0-9._%+-]+ ?@ ?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
+    while ((m = re.exec(s))) {
+      var at = m.index + m[0].indexOf('@');
+      if (N.weak[at] && /\s/.test(m[0])) continue;
+      add('email', m.index, m.index + m[0].length);
+    }
+    /* URL */
+    re = /(?:https?:\/{1,2}|www\.)[^\s]+/gi;
+    while ((m = re.exec(s))) {
+      var t = m[0].replace(/[.,;:!)\]）」』】、。]+$/, '');
+      add('url', m.index, m.index + t.length);
+    }
+    /* 郵便番号 */
+    re = /〒 ?\d{3}[- ]?\d{4}|\d{3}-\d{4}/g;
+    while ((m = re.exec(s))) {
+      var p3 = s.charAt(m.index - 1), n3 = s.charAt(m.index + m[0].length), n4 = s.charAt(m.index + m[0].length + 1);
+      if (m[0].charAt(0) !== '〒' && (isDigit(p3) || (p3 === '-' && isDigit(s.charAt(m.index - 2))))) continue;
+      if (isDigit(n3) || (n3 === '-' && isDigit(n4))) continue;
+      add('zip', m.index, m.index + m[0].length);
+    }
+    /* @が読めなかったときの保険: ドメイン名らしい文字列 */
+    re = new RegExp('[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*\\.' + TLD + '(?![A-Za-z0-9-])', 'gi');
+    while ((m = re.exec(s))) {
+      if (/[A-Za-z0-9@._-]/.test(s.charAt(m.index - 1) || ' ')) continue;
+      add('domain', m.index, m.index + m[0].length);
+    }
+    var PRI = { url: 6, email: 5, card: 4, phone: 3, zip: 2, domain: 1 };
+    raw.sort(function (x, y) { return x.ns - y.ns || y.ne - x.ne; });
+    var cur = null;
+    function flush() { if (cur) out.push({ kind: cur.kind, s: N.a[cur.ns], e: N.b[cur.ne - 1], norm: s.slice(cur.ns, cur.ne), luhn: !!cur.luhn }); }
+    raw.forEach(function (r) {
+      if (cur && r.ns < cur.ne) {
+        if (r.ne > cur.ne) cur.ne = r.ne;
+        if ((PRI[r.kind] || 0) > (PRI[cur.kind] || 0)) cur.kind = r.kind;
+        if (r.luhn) cur.luhn = true;
+      } else { flush(); cur = { kind: r.kind, ns: r.ns, ne: r.ne, luhn: r.luhn }; }
+    });
+    flush();
+    out.sort(function (x, y) { return x.s - y.s; });
+    return out;
+  }
+
+  /* OCRの1行({words:[{text,bbox,symbols:[{text,bbox}]}]})→ {text, boxes[]}。boxesは文字ごと(空白はnull) */
+  function lineChars(line) {
+    var text = '', boxes = [];
+    (line.words || []).forEach(function (w, wi) {
+      if (wi > 0) { text += ' '; boxes.push(null); }
+      var syms = w.symbols && w.symbols.length ? w.symbols : null;
+      if (syms) {
+        syms.forEach(function (sy) {
+          var t = sy.text || '';
+          for (var k = 0; k < t.length; k++) { text += t.charAt(k); boxes.push(sy.bbox); }
+        });
+      } else {
+        var t2 = w.text || '', bb = w.bbox, n = t2.length || 1, wd = (bb.x1 - bb.x0) / n;
+        for (var k2 = 0; k2 < t2.length; k2++) { text += t2.charAt(k2); boxes.push({ x0: bb.x0 + wd * k2, y0: bb.y0, x1: bb.x0 + wd * (k2 + 1), y1: bb.y1 }); }
+      }
+    });
+    return { text: text, boxes: boxes };
+  }
+  /* 候補の位置→外接矩形(OCR座標)。余白は呼び出し側 */
+  function unionBox(boxes, s, e) {
+    var u = null;
+    for (var i = s; i < e; i++) {
+      var b = boxes[i]; if (!b) continue;
+      if (!u) u = { x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1 };
+      else { u.x0 = Math.min(u.x0, b.x0); u.y0 = Math.min(u.y0, b.y0); u.x1 = Math.max(u.x1, b.x1); u.y1 = Math.max(u.y1, b.y1); }
+    }
+    return u;
+  }
+
+  var KIND = { email: 'メール', phone: '電話番号', zip: '郵便番号', url: 'URL', card: '長い数字', domain: 'ドメイン名' };
+  function maskLabel(t) {
+    t = String(t).replace(/\s+/g, '');
+    if (t.length <= 2) return '＊＊';
+    var n = Math.min(Math.max(t.length - 2, 1), 8), st = '';
+    for (var i = 0; i < n; i++) st += '*';
+    return t.charAt(0) + st + t.charAt(t.length - 1);
+  }
+
+  /* RGBAの矩形領域だけを使う箱ぼかし(3回・端は折り返さず端の値を使う)。周りの画素は混ぜない */
+  function boxBlur(data, w, h, r) {
+    if (w < 1 || h < 1) return;
+    var tmp = new Uint8ClampedArray(data.length), ch, pass;
+    function pass1(src, dst, horiz) {
+      var len = horiz ? w : h, lines = horiz ? h : w, win = 2 * r + 1;
+      for (var l = 0; l < lines; l++) {
+        for (ch = 0; ch < 4; ch++) {
+          var idx = function (p) { p = p < 0 ? 0 : (p >= len ? len - 1 : p); return (horiz ? (l * w + p) : (p * w + l)) * 4 + ch; };
+          var sum = 0, k;
+          for (k = -r; k <= r; k++) sum += src[idx(k)];
+          for (var p = 0; p < len; p++) {
+            dst[(horiz ? (l * w + p) : (p * w + l)) * 4 + ch] = sum / win;
+            sum += src[idx(p + r + 1)] - src[idx(p - r)];
+          }
+        }
+      }
+    }
+    for (pass = 0; pass < 3; pass++) { pass1(data, tmp, true); pass1(tmp, data, false); }
+  }
+  function blurRadius(boxH) { return Math.max(8, Math.ceil(boxH * 0.6)); }
+
+  /* 端末の見分け。保存の経路は機能検出(canShare)を優先し、UAでの見分けは「ダウンロードボタンを出すか」の補助 */
+  function isIOS(ua, platform, touchPoints) {
+    ua = ua || '';
+    if (/iPhone|iPad|iPod/.test(ua)) return true;
+    return /Macintosh/.test(ua) && (touchPoints || 0) > 1;
+  }
+  function saveRoute(canShareFiles) { return canShareFiles ? 'share' : 'longpress'; }
+
+  return { normalize: normalize, findCandidates: findCandidates, lineChars: lineChars, unionBox: unionBox, KIND: KIND, maskLabel: maskLabel,
+    boxBlur: boxBlur, blurRadius: blurRadius, isIOS: isIOS, saveRoute: saveRoute, luhn: luhn };
+})();
+</script>
+
+<script id="app">
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var VENDOR = 'vendor/tesseract/';
+  var MAX_SIDE = 4096, OCR_SIDE = 2400, PAD_MIN = 4;
+  var S = { src: null, w: 0, h: 0, boxes: [], nextId: 1, mode: 'fill', manual: false, token: 0, seq: 0, ocrState: 'idle', masked: null, scale: 1, resultUrl: '' };
+  var worker = null, workerPromise = null, libPromise = null, drag = null, raf = 0;
+  var view = $('view'), vctx = view.getContext('2d');
+
+  function setStatus(msg, pct) {
+    $('status').textContent = msg || '';
+    var bar = $('bar');
+    if (pct == null) { bar.style.display = 'none'; return; }
+    bar.style.display = 'block'; $('barFill').style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  /* ---------- 画像の読み込み ---------- */
+  function loadBitmap(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file, { imageOrientation: 'from-image' }).catch(function () { return createImageBitmap(file); }).catch(function () { return viaImg(file); });
+    }
+    return viaImg(file);
+  }
+  function viaImg(file) {
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(u); res(im); };
+      im.onerror = function () { URL.revokeObjectURL(u); rej(new Error('decode')); };
+      im.src = u;
+    });
+  }
+  function failMsg() { return 'この形式は読み込めません。PNG・JPEG・WebPの画像を選んでください。' + (S.src ? '（前に選んだ画像は、そのまま残っています）' : ''); }
+  function onFile() {
+    var f = $('file').files && $('file').files[0];
+    if (!f) return;
+    try { $('file').value = ''; } catch (e) {}
+    var name = (f.name || '').toLowerCase();
+    if ((f.type && !/^image\//.test(f.type)) || /heic|heif/.test(f.type || '') || /\.(heic|heif)$/.test(name) || /svg/.test(f.type || '')) {
+      setStatus(failMsg()); return;
+    }
+    var seq = ++S.seq, token;
+    setStatus('画像を読み込んでいます…');
+    loadBitmap(f).then(function (bm) {
+      if (seq !== S.seq) return;
+      token = ++S.token;
+      var w0 = bm.width || bm.naturalWidth, h0 = bm.height || bm.naturalHeight;
+      if (!w0 || !h0) throw new Error('size');
+      var k = Math.min(1, MAX_SIDE / Math.max(w0, h0)), w = Math.max(1, Math.round(w0 * k)), h = Math.max(1, Math.round(h0 * k));
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(bm, 0, 0, w, h);
+      if (bm.close) bm.close();
+      S.src = c; S.w = w; S.h = h; S.boxes = []; S.nextId = 1; S.masked = null;
+      hideResult();
+      $('empty').style.display = 'none'; view.style.display = 'block';
+      $('manualBtn').disabled = false;
+      refresh();
+      var note = k < 1 ? '長辺が' + MAX_SIDE + 'pxを超えていたため、縮小して扱います。' : '';
+      startOcr(token, note);
+    }).catch(function () {
+      if (seq !== S.seq) return;
+      setStatus(failMsg());
+    });
+  }
+
+  /* ---------- 文字認識 ---------- */
+  function loadLib() {
+    if (window.Tesseract) return Promise.resolve();
+    if (libPromise) return libPromise;
+    libPromise = new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = VENDOR + 'tesseract.min.js';
+      s.onload = res; s.onerror = function () { libPromise = null; rej(new Error('lib')); };
+      document.head.appendChild(s);
+    });
+    return libPromise;
+  }
+  var curToken = 0;
+  function logger(m) {
+    if (curToken !== S.token) return;
+    var p = Math.round((m.progress || 0) * 100);
+    if (m.status === 'loading tesseract core') setStatus('文字認識の準備中です: プログラムを読み込んでいます（' + p + '%）', p);
+    else if (m.status === 'loading language traineddata') setStatus('文字認識の準備中です: 日本語データを読み込んでいます（' + p + '%）', p);
+    else if (m.status === 'initializing api' || m.status === 'initializing tesseract') setStatus('文字認識の準備中です…', 100);
+    else if (m.status === 'recognizing text') setStatus('文字を読み取っています（' + p + '%）', p);
+  }
+  function getWorker() {
+    if (worker) return Promise.resolve(worker);
+    if (workerPromise) return workerPromise;
+    workerPromise = loadLib().then(function () {
+      return Tesseract.createWorker('jpn', 1, {
+        workerPath: VENDOR + 'worker.min.js', corePath: VENDOR + 'core/', langPath: VENDOR + 'lang/',
+        cacheMethod: 'none', workerBlobURL: false, gzip: true, logger: logger
+      });
+    }).then(function (w) { worker = w; return w; }, function (e) { workerPromise = null; throw e; });
+    return workerPromise;
+  }
+  function startOcr(token, note) {
+    curToken = token;
+    if (Math.max(S.w, S.h) < 100) {
+      S.ocrState = 'done'; setStatus((note || '') + '文字が読み取れませんでした。手動でなぞって隠せます。'); refresh(); return;
+    }
+    S.ocrState = 'running'; refresh();
+    setStatus('文字認識の準備中です…', 0);
+    var long = Math.max(S.w, S.h), s1 = Math.min(1, OCR_SIDE / long);
+    var scales = [s1]; if (long * 2 <= OCR_SIDE) scales.push(2); /* 小さい画像は2倍に拡大した読み取りも行い、取りこぼしを減らす */
+    var words = 0, found = [];
+    function pass(scale, idx) {
+      var oc = document.createElement('canvas'); oc.width = Math.max(1, Math.round(S.w * scale)); oc.height = Math.max(1, Math.round(S.h * scale));
+      var ox = oc.getContext('2d'); ox.imageSmoothingQuality = 'high'; ox.drawImage(S.src, 0, 0, oc.width, oc.height);
+      return getWorker().then(function (w) {
+        if (token !== S.token) return null;
+        return w.recognize(oc, {}, { blocks: true });
+      }).then(function (r) {
+        if (!r || token !== S.token) return;
+        ((r.data && r.data.blocks) || []).forEach(function (b) { (b.paragraphs || []).forEach(function (p) { (p.lines || []).forEach(function (l) {
+          words += (l.words || []).length;
+          var lc = SP.lineChars(l);
+          SP.findCandidates(lc.text).forEach(function (c) {
+            var u = SP.unionBox(lc.boxes, c.s, c.e); if (!u) return;
+            var x0 = u.x0 / scale, y0 = u.y0 / scale, x1 = u.x1 / scale, y1 = u.y1 / scale, bh = Math.max(1, y1 - y0);
+            var padY = Math.max(PAD_MIN, Math.round(bh * 0.2)), padX = Math.max(PAD_MIN + 2, Math.round(bh * 0.5));
+            x0 = Math.max(0, x0 - padX); y0 = Math.max(0, y0 - padY); x1 = Math.min(S.w, x1 + padX); y1 = Math.min(S.h, y1 + padY);
+            if (x1 - x0 < 2 || y1 - y0 < 2) return;
+            var nb = { kind: c.kind, x: x0, y: y0, w: x1 - x0, h: y1 - y0, label: SP.maskLabel(lc.text.slice(c.s, c.e)), luhn: !!c.luhn };
+            /* 1回目と2回目で同じ箇所なら1つにまとめる(外側の範囲を採る) */
+            for (var i = 0; i < found.length; i++) {
+              var f = found[i], ix = Math.min(f.x + f.w, nb.x + nb.w) - Math.max(f.x, nb.x), iy = Math.min(f.y + f.h, nb.y + nb.h) - Math.max(f.y, nb.y);
+              if (ix > 0 && iy > 0 && ix * iy > 0.5 * Math.min(f.w * f.h, nb.w * nb.h)) {
+                var ex = Math.min(f.x, nb.x), ey = Math.min(f.y, nb.y), ew = Math.max(f.x + f.w, nb.x + nb.w) - ex, eh = Math.max(f.y + f.h, nb.y + nb.h) - ey;
+                f.x = ex; f.y = ey; f.w = ew; f.h = eh; if (f.kind === 'domain' && nb.kind !== 'domain') { f.kind = nb.kind; f.label = nb.label; f.luhn = nb.luhn; }
+                return;
+              }
+            }
+            found.push(nb);
+          });
+        }); }); });
+      });
+    }
+    var chain = Promise.resolve();
+    scales.forEach(function (sc, idx) { chain = chain.then(function () { if (token !== S.token) return; if (idx > 0) setStatus('小さい文字を拾うため、拡大してもう一度読み取っています…', 0); return idx > 0 ? pass(sc, idx).catch(function () {}) : pass(sc, idx); }); });
+    chain.then(function () {
+      if (token !== S.token) return;
+      found.sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
+      found.forEach(function (f) { S.boxes.push({ id: S.nextId++, kind: f.kind, auto: true, x: f.x, y: f.y, w: f.w, h: f.h, on: true, label: f.label, luhn: f.luhn }); });
+      S.ocrState = 'done'; S.masked = null; hideResult();
+      if (words === 0) setStatus((note || '') + '文字が読み取れませんでした。手動でなぞって隠せます。');
+      else if (!found.length) setStatus((note || '') + '候補は見つかりませんでした。写っていないとは限りません。自分の目でも確認し、必要なら手動でなぞって隠してください。');
+      else setStatus((note || '') + '候補を' + found.length + '件見つけました。一覧で確認してください。');
+      refresh();
+    }).catch(function () {
+      if (token !== S.token) return;
+      S.ocrState = 'error'; S.masked = null; hideResult();
+      setStatus((note || '') + '文字認識を読み込めませんでした。手動でなぞって隠すことはできます。');
+      refresh();
+    });
+  }
+
+  /* ---------- 隠す処理 ---------- */
+  function renderMasked(full) {
+    var c = document.createElement('canvas'); c.width = S.w; c.height = S.h;
+    var x = c.getContext('2d'); x.drawImage(S.src, 0, 0);
+    S.boxes.forEach(function (b) {
+      if (!b.on) return;
+      var bx = Math.max(0, Math.floor(b.x)), by = Math.max(0, Math.floor(b.y));
+      var bw = Math.min(S.w, Math.ceil(b.x + b.w)) - bx, bh = Math.min(S.h, Math.ceil(b.y + b.h)) - by;
+      if (bw < 1 || bh < 1) return;
+      if (S.mode === 'blur' && bw * bh <= 1500000) {
+        var id = x.getImageData(bx, by, bw, bh); SP.boxBlur(id.data, bw, bh, SP.blurRadius(bh)); x.putImageData(id, bx, by);
+      } else { x.fillStyle = '#000'; x.fillRect(bx, by, bw, bh); }
+    });
+    return c;
+  }
+
+  /* ---------- 表示 ---------- */
+  function draw() {
+    raf = 0;
+    if (!S.src) return;
+    var cssW = view.clientWidth || 360, iw = Math.min(S.w, 1600), ih = Math.round(S.h * iw / S.w);
+    if (view.width !== iw || view.height !== ih) { view.width = iw; view.height = ih; }
+    if (!S.masked) S.masked = renderMasked();
+    vctx.clearRect(0, 0, iw, ih); vctx.drawImage(S.masked, 0, 0, iw, ih);
+    var k = iw / S.w, u = iw / cssW, lw = 3 * u, fs = Math.round(14 * u);
+    var manualCount = 0;
+    S.boxes.forEach(function (b, i) {
+      var num = i + 1, x = b.x * k, y = b.y * k, w = b.w * k, h = b.h * k;
+      var col = !b.auto ? '#1558B0' : '#D61F1F';
+      vctx.lineJoin = 'round';
+      vctx.setLineDash(b.on ? [] : [6 * u, 4 * u]);
+      vctx.strokeStyle = '#fff'; vctx.lineWidth = lw + 2 * u; vctx.strokeRect(x, y, w, h);
+      vctx.strokeStyle = b.on ? col : '#555'; vctx.lineWidth = lw; vctx.strokeRect(x, y, w, h);
+      vctx.setLineDash([]);
+      vctx.font = '700 ' + fs + 'px sans-serif'; var t = String(num), tw = vctx.measureText(t).width + 8 * u, th = fs + 6 * u;
+      var ty = y - th >= 0 ? y - th : y;
+      vctx.fillStyle = b.on ? col : '#555'; vctx.fillRect(x, ty, tw, th);
+      vctx.strokeStyle = '#fff'; vctx.lineWidth = 1.5 * u; vctx.strokeRect(x, ty, tw, th);
+      vctx.fillStyle = '#fff'; vctx.textBaseline = 'middle'; vctx.fillText(t, x + 4 * u, ty + th / 2);
+      if (!b.auto) manualCount++;
+    });
+    if (drag) {
+      var dx = Math.min(drag.x0, drag.x1) * k, dy = Math.min(drag.y0, drag.y1) * k, dw = Math.abs(drag.x1 - drag.x0) * k, dh = Math.abs(drag.y1 - drag.y0) * k;
+      vctx.strokeStyle = '#fff'; vctx.lineWidth = lw + 2 * u; vctx.strokeRect(dx, dy, dw, dh);
+      vctx.strokeStyle = '#1558B0'; vctx.lineWidth = lw; vctx.setLineDash([6 * u, 4 * u]); vctx.strokeRect(dx, dy, dw, dh); vctx.setLineDash([]);
+    }
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(draw); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function renderList() {
+    var ul = $('list'); ul.textContent = '';
+    if (!S.src) { ul.appendChild(el('li', 'small', '画像を選ぶと、ここに候補が出ます。')); return; }
+    if (!S.boxes.length) {
+      ul.appendChild(el('li', 'small', S.ocrState === 'running' ? '文字を読み取っています。読み取りのあいだも、なぞって足せます。' : '候補はありません。写っていないとは限りません。自分の目でも確認してください。'));
+      return;
+    }
+    S.boxes.forEach(function (b, i) {
+      var li = el('li', 'row' + (b.on ? '' : ' off') + (b.auto ? '' : ' manual-row'));
+      li.appendChild(el('span', 'num', String(i + 1)));
+      var head = el('div', 'head');
+      head.appendChild(el('div', 'kind', b.auto ? (SP.KIND[b.kind] || '候補') + (b.luhn ? '（カード番号の形に合う目安）' : '') : '手でなぞって足した箇所'));
+      head.appendChild(el('div', 'txt', b.auto ? b.label : '（文字は表示しません）'));
+      li.appendChild(head);
+      var seg = el('div', 'seg' + (b.auto ? '' : ' has-del'));
+      var bOn = el('button', null, '隠す'), bOff = el('button', null, '隠さない');
+      bOn.type = 'button'; bOff.type = 'button';
+      bOn.setAttribute('aria-pressed', b.on ? 'true' : 'false'); bOff.setAttribute('aria-pressed', b.on ? 'false' : 'true');
+      bOn.setAttribute('aria-label', (i + 1) + '番を隠す'); bOff.setAttribute('aria-label', (i + 1) + '番を隠さない');
+      bOn.onclick = function () { b.on = true; changed(); }; bOff.onclick = function () { b.on = false; changed(); };
+      seg.appendChild(bOn); seg.appendChild(bOff);
+      if (!b.auto) {
+        var del = el('button', null, '削除'); del.type = 'button'; del.setAttribute('aria-label', (i + 1) + '番を削除');
+        del.onclick = function () { S.boxes = S.boxes.filter(function (x) { return x !== b; }); changed(); };
+        seg.appendChild(del);
+      }
+      li.appendChild(seg); ul.appendChild(li);
+    });
+  }
+  function renderCounts() {
+    var autoOn = 0, manOn = 0, auto = 0;
+    S.boxes.forEach(function (b) { if (b.auto) auto++; if (b.on) { if (b.auto) autoOn++; else manOn++; } });
+    $('candCount').textContent = S.src ? '（自動 ' + auto + '件・手動 ' + (S.boxes.length - auto) + '件）' : '';
+    $('hideCount').textContent = '自動で隠した箇所は' + autoOn + '個です' + (manOn ? '（なぞって足した箇所は' + manOn + '個）' : '') + '。ここに入っていない文字が残っている可能性があります。';
+    $('undoBtn').disabled = !S.boxes.some(function (b) { return !b.auto; });
+  }
+  function refresh() { renderList(); renderCounts(); $('saveBtn').disabled = !S.src || S.ocrState === 'running'; schedule(); }
+  function changed() { S.masked = null; hideResult(); refresh(); }
+
+  /* ---------- 手動なぞり ---------- */
+  function toSrc(e) {
+    var r = view.getBoundingClientRect();
+    return { x: Math.max(0, Math.min(S.w, (e.clientX - r.left) * S.w / r.width)), y: Math.max(0, Math.min(S.h, (e.clientY - r.top) * S.h / r.height)) };
+  }
+  view.addEventListener('pointerdown', function (e) {
+    if (!S.manual || !S.src) return;
+    e.preventDefault(); try { view.setPointerCapture(e.pointerId); } catch (x) {}
+    var p = toSrc(e); drag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y, id: e.pointerId };
+  });
+  view.addEventListener('pointermove', function (e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    e.preventDefault(); var p = toSrc(e); drag.x1 = p.x; drag.y1 = p.y; schedule();
+  });
+  function endDrag(e, cancel) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var d = drag; drag = null;
+    var r = view.getBoundingClientRect(), k = S.w / r.width;
+    var x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1), w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
+    if (!cancel && w * 1 >= 6 * k && h >= 6 * k) {
+      S.boxes.push({ id: S.nextId++, kind: 'manual', auto: false, x: x, y: y, w: w, h: h, on: true });
+      changed();
+    } else schedule();
+  }
+  view.addEventListener('pointerup', function (e) { endDrag(e, false); });
+  view.addEventListener('pointercancel', function (e) { endDrag(e, true); });
+  $('manualBtn').onclick = function () {
+    S.manual = !S.manual;
+    this.setAttribute('aria-pressed', S.manual ? 'true' : 'false');
+    this.textContent = 'なぞって隠す箇所を足す: ' + (S.manual ? 'ON' : 'OFF');
+    view.classList.toggle('manual', S.manual);
+    $('manualHint').textContent = S.manual ? 'いま画像の上をなぞると四角が足せます。この間、画像の上ではスクロールできません。終わったらOFFに戻してください。' : 'ONにすると、画像の上を指やマウスでなぞって四角を足せます。OFFのあいだは通常どおりスクロールできます。';
+  };
+  $('undoBtn').onclick = function () {
+    for (var i = S.boxes.length - 1; i >= 0; i--) if (!S.boxes[i].auto) { S.boxes.splice(i, 1); break; }
+    changed();
+  };
+  Array.prototype.forEach.call(document.getElementsByName('mode'), function (r) {
+    r.addEventListener('change', function () { if (r.checked) { S.mode = r.value; changed(); } });
+  });
+
+  /* ---------- 保存(iPhone対応: toBlobを使わず、同じイベント内で同期的にFileを作る) ---------- */
+  function hideResult() { $('resultCard').hidden = true; $('saveMsg').textContent = ''; }
+  function dataUrlToFile(url, name) {
+    var b64 = url.split(',')[1], bin = atob(b64), n = bin.length, u8 = new Uint8Array(n);
+    for (var i = 0; i < n; i++) u8[i] = bin.charCodeAt(i);
+    return new File([u8], name, { type: 'image/png' });
+  }
+  $('saveBtn').onclick = function () {
+    if (!S.src) return;
+    var url, shrunk = false, out;
+    try { out = renderMasked(); url = out.toDataURL('image/png'); if (!url || url.length < 30) throw new Error('empty'); }
+    catch (e1) {
+      try {
+        var c2 = document.createElement('canvas'); c2.width = Math.round(out.width / 2); c2.height = Math.round(out.height / 2);
+        c2.getContext('2d').drawImage(out, 0, 0, c2.width, c2.height); url = c2.toDataURL('image/png'); shrunk = true; if (!url || url.length < 30) throw new Error('empty');
+      } catch (e2) { hideResult(); $('saveMsg').textContent = '画像が大きすぎて保存できませんでした。小さい画像で試してください。'; return; }
+    }
+    if (!url) { $('saveMsg').textContent = '保存できませんでした。小さい画像で試してください。'; return; }
+    $('resultImg').src = url; $('resultCard').hidden = false; $('resultNote').textContent = '保存前に、画像全体を目で確認してください。自動検出は完全ではありません。氏名・住所は見つけにくいです。' + (shrunk ? '（メモリの都合で半分の大きさに縮小して保存しました）' : '');
+    var file, canShare = false, ios = SP.isIOS(navigator.userAgent, navigator.platform, navigator.maxTouchPoints);
+    try { file = dataUrlToFile(url, 'masked.png'); canShare = !!(navigator.canShare && navigator.share && navigator.canShare({ files: [file] })); } catch (e3) { canShare = false; }
+    var dl = $('dlLink'); dl.href = url; dl.hidden = ios; $('longpress').hidden = true;
+    if (SP.saveRoute(canShare) === 'share') {
+      $('saveMsg').textContent = '共有メニューが開いたら「画像を保存」を選んでください。';
+      navigator.share({ files: [file] }).catch(function (err) {
+        if (err && err.name === 'AbortError') { $('saveMsg').textContent = ''; return; }
+        $('longpress').hidden = false; $('saveMsg').textContent = '共有メニューを開けませんでした。下の画像を長押しして保存してください。';
+      });
+    } else {
+      $('longpress').hidden = false;
+      $('saveMsg').textContent = ios ? '下の画像を長押しして保存してください。' : '下の画像を確認し、「PNGファイルとしてダウンロード」で保存してください。';
+    }
+    $('resultCard').scrollIntoView && $('resultCard').scrollIntoView({ block: 'nearest' });
+  };
+  $('zoomBtn').onclick = function () {
+    var on = this.getAttribute('aria-pressed') !== 'true';
+    this.setAttribute('aria-pressed', on ? 'true' : 'false'); this.textContent = on ? '幅に合わせる' : '実寸で見る';
+    $('resWrap').classList.toggle('full', on);
+  };
+  $('file').addEventListener('change', onFile);
+  window.addEventListener('resize', schedule);
+  window.__sp = S;
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon='{"token": "b4c9f7e78daf4edb84ef52b88633f649"}'></script>
+</body>
+</html>
