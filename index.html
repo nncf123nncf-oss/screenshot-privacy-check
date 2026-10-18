@@ -19,7 +19,7 @@
       --danger: #FF8A80; --danger-soft: #4a2323; --manual: #8EC1FF; --warn-bg: #4a3a0c; --warn-ink: #ffe9b0; --warn-line: #e0b34a;
     }
     :root:not([data-theme="light"]) .row .num { color: #1a0a0a; }
-    :root:not([data-theme="light"]) .row.off .num { color: #10160d; }
+    :root:not([data-theme="light"]) .row.off .num { background: #adbda3; color: #10160d; }
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -29,7 +29,7 @@
   h2 { font-size: 17px; line-height: 1.4; margin: 0 0 8px; }
   p { margin: 0 0 8px; }
   .lead { color: var(--ink2); }
-  .notice { margin: 0 0 12px; padding: 10px 12px; list-style: none; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: 6px; font-size: 15px; line-height: 1.6; }
+  .notice { margin: 0 0 12px; padding: 10px 12px; list-style: none; background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: 6px; font-size: 14px; line-height: 1.6; }
   .notice li { margin: 0 0 2px; } .notice li:last-child { margin: 0; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 12px; min-width: 0; }
   .pick { display: flex; flex-direction: column; gap: 6px; }
@@ -46,15 +46,19 @@
   button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
   button:disabled { opacity: .45; cursor: not-allowed; }
   .primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; width: 100%; }
-  .stage { position: relative; width: 100%; border: 1px dashed var(--line-strong); border-radius: 6px; background: var(--bg); min-height: 120px; overflow: hidden; }
+  .stage { position: relative; width: 100%; border: 1px dashed var(--line-strong); border-radius: 6px; background: var(--bg); min-height: 120px; max-height: 70vh; max-height: 70dvh; overflow: auto; }
   .stage .empty { padding: 28px 12px; text-align: center; color: var(--ink3); }
-  #view { display: none; width: 100%; height: auto; touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
+  #view { display: none; width: 100%; max-width: none; height: auto; touch-action: pan-x pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
   #view.manual { touch-action: none; cursor: crosshair; outline: 3px solid var(--manual); outline-offset: -3px; }
+  .zoom { display: grid; grid-template-columns: 1fr minmax(0, 1.2fr) 1fr; gap: 8px; align-items: center; margin: 0 0 8px; }
+  .zoom .zl { text-align: center; font-size: 15px; font-weight: 700; }
+  .jump { width: 100%; margin: 0 0 8px; }
+  .more { width: 100%; margin: 8px 0 0; }
   .list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
   .row { display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-areas: "num head" "num seg"; gap: 4px 8px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
   .row .num { grid-area: num; width: 30px; height: 30px; border-radius: 50%; background: var(--danger); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px; }
   .row.manual-row .num { background: var(--manual); }
-  .row.off .num { background: #5a6850; color: #fff; }
+  .row.off .num { background: #4a5642; color: #fff; }
   .row .head { grid-area: head; min-width: 0; }
   .row .kind { font-size: 14px; color: var(--ink3); }
   .row .txt { font-family: ui-monospace, Consolas, monospace; font-size: 15px; overflow-wrap: anywhere; word-break: break-all; }
@@ -90,9 +94,9 @@
   <h1>スクショ見張り番</h1>
   <p class="lead">スクショを読み込むと、写っている文字をこの画面の中で読み取り、メール・電話番号・郵便番号・URL・長い数字らしい箇所に赤枠を付けます。塗りつぶしかぼかしで隠した画像を保存できます。</p>
   <ul class="notice" aria-label="先に読んでください">
-    <li>自動検出は完全ではありません。投稿前に目で確認してください。</li>
-    <li>氏名・住所は見つけにくいです。写っていないか自分の目でも確認してください。</li>
-    <li>画像はこのページの中（お使いの端末のブラウザ）だけで処理し、送信しません。</li>
+    <li>自動検出は完全ではありません。目で確認を。</li>
+    <li>氏名・住所は特に見つけにくいです。</li>
+    <li>画像は端末の中だけで処理し、送信しません。</li>
   </ul>
 
   <div class="layout">
@@ -109,7 +113,12 @@
           <button type="button" class="t-mode" id="manualBtn" aria-pressed="false" disabled>なぞって隠す箇所を足す: OFF</button>
           <button type="button" class="t-undo" id="undoBtn" disabled>直前に足した箇所を取り消す</button>
         </div>
-        <p class="small" id="manualHint">ONにすると、画像の上を指やマウスでなぞって四角を足せます。OFFのあいだは通常どおりスクロールできます。</p>
+        <div class="zoom" role="group" aria-label="表示の拡大">
+          <button type="button" id="zoomOut" disabled aria-label="表示を縮小">縮小 −</button>
+          <span class="zl" id="zoomLabel" role="status" aria-live="polite">表示 ×1</span>
+          <button type="button" id="zoomIn" disabled aria-label="表示を拡大">拡大 ＋</button>
+        </div>
+        <p class="small" id="manualHint">ONにすると、画像の上を指やマウスでなぞって四角を足せます。小さい文字は「拡大」してからなぞると合わせやすくなります。</p>
         <div class="stage" id="stage">
           <div class="empty" id="empty">画像を選ぶと、ここに赤枠つきで表示します。</div>
           <canvas id="view" aria-label="読み込んだ画像。赤枠が隠す候補の位置"></canvas>
@@ -121,9 +130,12 @@
       <div class="card">
         <h2>隠す候補 <span id="candCount" class="small"></span></h2>
         <p class="small">一覧の文字は先頭と末尾以外を伏せて表示しています。誤って拾った箇所は「隠さない」にできます。</p>
+        <button type="button" class="jump" id="jumpBtn" disabled>保存ボタンへ移動 ↓</button>
         <ul class="list" id="list"><li class="small">画像を選ぶと、ここに候補が出ます。</li></ul>
+        <button type="button" class="more" id="moreBtn" aria-expanded="false" hidden></button>
+        <p class="small" id="moreNote" hidden></p>
       </div>
-      <div class="card">
+      <div class="card" id="saveCard">
         <h2>隠し方</h2>
         <div class="opts" role="radiogroup" aria-label="隠し方">
           <label><input type="radio" name="mode" value="fill" checked> 塗りつぶし（黒）</label>
@@ -364,7 +376,8 @@ var SP = (function () {
   var $ = function (id) { return document.getElementById(id); };
   var VENDOR = 'vendor/tesseract/';
   var MAX_SIDE = 4096, OCR_SIDE = 2400, PAD_MIN = 4;
-  var S = { src: null, w: 0, h: 0, boxes: [], nextId: 1, mode: 'fill', manual: false, token: 0, seq: 0, ocrState: 'idle', masked: null, scale: 1, resultUrl: '' };
+  var S = { src: null, w: 0, h: 0, boxes: [], nextId: 1, mode: 'fill', manual: false, token: 0, seq: 0, ocrState: 'idle', masked: null, scale: 1, resultUrl: '', zoom: 1, expanded: false };
+  var LIST_LIMIT = 5, ZOOM_MAX = 4;
   var worker = null, workerPromise = null, libPromise = null, drag = null, raf = 0;
   var view = $('view'), vctx = view.getContext('2d');
 
@@ -411,7 +424,7 @@ var SP = (function () {
       var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
       x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(bm, 0, 0, w, h);
       if (bm.close) bm.close();
-      S.src = c; S.w = w; S.h = h; S.boxes = []; S.nextId = 1; S.masked = null;
+      S.src = c; S.w = w; S.h = h; S.boxes = []; S.nextId = 1; S.masked = null; S.expanded = false; resetPointers(); setZoom(1);
       hideResult();
       $('empty').style.display = 'none'; view.style.display = 'block';
       $('manualBtn').disabled = false;
@@ -536,7 +549,7 @@ var SP = (function () {
   function draw() {
     raf = 0;
     if (!S.src) return;
-    var cssW = view.clientWidth || 360, iw = Math.min(S.w, 1600), ih = Math.round(S.h * iw / S.w);
+    var cssW = view.clientWidth || 360, iw = Math.min(S.w, S.zoom > 1 ? 3200 : 1600), ih = Math.round(S.h * iw / S.w);
     if (view.width !== iw || view.height !== ih) { view.width = iw; view.height = ih; }
     if (!S.masked) S.masked = renderMasked();
     vctx.clearRect(0, 0, iw, ih); vctx.drawImage(S.masked, 0, 0, iw, ih);
@@ -572,7 +585,9 @@ var SP = (function () {
       ul.appendChild(el('li', 'small', S.ocrState === 'running' ? '文字を読み取っています。読み取りのあいだも、なぞって足せます。' : '候補はありません。写っていないとは限りません。自分の目でも確認してください。'));
       return;
     }
+    var shown = S.expanded ? S.boxes.length : Math.min(S.boxes.length, LIST_LIMIT);
     S.boxes.forEach(function (b, i) {
+      if (i >= shown) return;
       var li = el('li', 'row' + (b.on ? '' : ' off') + (b.auto ? '' : ' manual-row'));
       li.appendChild(el('span', 'num', String(i + 1)));
       var head = el('div', 'head');
@@ -594,6 +609,15 @@ var SP = (function () {
       li.appendChild(seg); ul.appendChild(li);
     });
   }
+  function renderMore() {
+    var mb = $('moreBtn'), n = S.boxes.length;
+    mb.hidden = !(S.src && n > LIST_LIMIT);
+    mb.textContent = S.expanded ? '一覧を折りたたむ（' + LIST_LIMIT + '件だけ表示）' : '残り' + (n - LIST_LIMIT) + '件を表示';
+    var offHidden = 0; if (!S.expanded) S.boxes.forEach(function (b, i) { if (i >= LIST_LIMIT && !b.on) offHidden++; });
+    $('moreNote').hidden = !!S.expanded || mb.hidden;
+    $('moreNote').textContent = '折りたたんでいても、「隠す」の枠は保存画像で隠れます。「隠さない」にした枠は隠れません' + (offHidden ? '（折りたたみ中に「隠さない」が' + offHidden + '件あります）' : '') + '。';
+    mb.setAttribute('aria-expanded', S.expanded ? 'true' : 'false');
+  }
   function renderCounts() {
     var autoOn = 0, manOn = 0, auto = 0;
     S.boxes.forEach(function (b) { if (b.auto) auto++; if (b.on) { if (b.auto) autoOn++; else manOn++; } });
@@ -601,7 +625,7 @@ var SP = (function () {
     $('hideCount').textContent = '自動で隠した箇所は' + autoOn + '個です' + (manOn ? '（なぞって足した箇所は' + manOn + '個）' : '') + '。ここに入っていない文字が残っている可能性があります。';
     $('undoBtn').disabled = !S.boxes.some(function (b) { return !b.auto; });
   }
-  function refresh() { renderList(); renderCounts(); $('saveBtn').disabled = !S.src || S.ocrState === 'running'; schedule(); }
+  function refresh() { renderList(); renderMore(); renderCounts(); $('jumpBtn').disabled = !S.src; $('zoomIn').disabled = !S.src || S.zoom >= ZOOM_MAX; $('zoomOut').disabled = !S.src || S.zoom <= 1; $('saveBtn').disabled = !S.src || S.ocrState === 'running'; schedule(); }
   function changed() { S.masked = null; hideResult(); refresh(); }
 
   /* ---------- 手動なぞり ---------- */
@@ -609,33 +633,64 @@ var SP = (function () {
     var r = view.getBoundingClientRect();
     return { x: Math.max(0, Math.min(S.w, (e.clientX - r.left) * S.w / r.width)), y: Math.max(0, Math.min(S.h, (e.clientY - r.top) * S.h / r.height)) };
   }
+  var stage = $('stage'), ptrs = {}, pan = null;
+  function ptrCount() { return Object.keys(ptrs).length; }
   view.addEventListener('pointerdown', function (e) {
     if (!S.manual || !S.src) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault(); try { view.setPointerCapture(e.pointerId); } catch (x) {}
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (ptrCount() >= 2) { drag = null; pan = null; schedule(); return; } /* 2本指=画像の中の移動。四角は描かない */
     var p = toSrc(e); drag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y, id: e.pointerId };
   });
   view.addEventListener('pointermove', function (e) {
+    if (!ptrs[e.pointerId]) { if (drag && e.pointerId === drag.id) { e.preventDefault(); var q = toSrc(e); drag.x1 = q.x; drag.y1 = q.y; schedule(); } return; }
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (ptrCount() >= 2) {
+      e.preventDefault(); var ids = Object.keys(ptrs), a = ptrs[ids[0]], b = ptrs[ids[1]], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (pan) { stage.scrollLeft -= mx - pan.x; stage.scrollTop -= my - pan.y; }
+      pan = { x: mx, y: my }; return;
+    }
     if (!drag || e.pointerId !== drag.id) return;
     e.preventDefault(); var p = toSrc(e); drag.x1 = p.x; drag.y1 = p.y; schedule();
   });
   function endDrag(e, cancel) {
+    var had = !!ptrs[e.pointerId]; delete ptrs[e.pointerId]; if (ptrCount() < 2) pan = null;
     if (!drag || e.pointerId !== drag.id) return;
     var d = drag; drag = null;
     var r = view.getBoundingClientRect(), k = S.w / r.width;
     var x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1), w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
     if (!cancel && w * 1 >= 6 * k && h >= 6 * k) {
       S.boxes.push({ id: S.nextId++, kind: 'manual', auto: false, x: x, y: y, w: w, h: h, on: true });
+      if (S.boxes.length > LIST_LIMIT) S.expanded = true; /* 足した枠が折りたたみの奥に隠れないように */
       changed();
     } else schedule();
   }
   view.addEventListener('pointerup', function (e) { endDrag(e, false); });
   view.addEventListener('pointercancel', function (e) { endDrag(e, true); });
+  view.addEventListener('lostpointercapture', function (e) { endDrag(e, true); });
+  function resetPointers() { ptrs = {}; drag = null; pan = null; schedule(); }
+  /* 表示の拡大(なぞりの精度のため)。拡大しても画像の中身・座標は変わらず、見える大きさだけ変わる */
+  function setZoom(z) {
+    z = Math.max(1, Math.min(ZOOM_MAX, z));
+    var fx = stage.scrollWidth ? (stage.scrollLeft + stage.clientWidth / 2) / stage.scrollWidth : 0, fy = stage.scrollHeight ? (stage.scrollTop + stage.clientHeight / 2) / stage.scrollHeight : 0;
+    S.zoom = z; view.style.width = (z * 100) + '%';
+    $('zoomLabel').textContent = '表示 ×' + z;
+    if (S.src) {
+      stage.scrollLeft = fx * stage.scrollWidth - stage.clientWidth / 2; stage.scrollTop = fy * stage.scrollHeight - stage.clientHeight / 2;
+      $('zoomIn').disabled = z >= ZOOM_MAX; $('zoomOut').disabled = z <= 1; schedule();
+    }
+  }
+  $('zoomIn').onclick = function () { setZoom(S.zoom + 1); };
+  $('zoomOut').onclick = function () { setZoom(S.zoom - 1); };
+  $('jumpBtn').onclick = function () { $('saveCard').scrollIntoView({ block: 'start', behavior: 'smooth' }); try { $('saveBtn').focus({ preventScroll: true }); } catch (e) {} };
+  $('moreBtn').onclick = function () { S.expanded = !S.expanded; refresh(); };
   $('manualBtn').onclick = function () {
-    S.manual = !S.manual;
+    S.manual = !S.manual; resetPointers();
     this.setAttribute('aria-pressed', S.manual ? 'true' : 'false');
     this.textContent = 'なぞって隠す箇所を足す: ' + (S.manual ? 'ON' : 'OFF');
     view.classList.toggle('manual', S.manual);
-    $('manualHint').textContent = S.manual ? 'いま画像の上をなぞると四角が足せます。この間、画像の上ではスクロールできません。終わったらOFFに戻してください。' : 'ONにすると、画像の上を指やマウスでなぞって四角を足せます。OFFのあいだは通常どおりスクロールできます。';
+    $('manualHint').textContent = S.manual ? 'いま画像の上を1本指でなぞると四角が足せます。指2本で動かすと、画像の中を移動できます。ページをスクロールするときは、画像の外側を触るか、OFFに戻してください。' : 'ONにすると、画像の上を指やマウスでなぞって四角を足せます。小さい文字は「拡大」してからなぞると合わせやすくなります。';
   };
   $('undoBtn').onclick = function () {
     for (var i = S.boxes.length - 1; i >= 0; i--) if (!S.boxes[i].auto) { S.boxes.splice(i, 1); break; }

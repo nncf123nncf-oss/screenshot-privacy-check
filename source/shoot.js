@@ -11,12 +11,12 @@ async function load(c, file) {
 (async () => {
   const c = await launch(9374);
   // Card1: PC幅・塗りつぶし(既定)・自動検出5件
-  await c.open('http://127.0.0.1:8073/index.html', 1000, 1100, 2, false, 'light');
+  await c.open('http://127.0.0.1:8073/index.html', 1000, 1400, 2, false, 'light');
   await load(c, 'dummy-inquiry.png');
   await c.sleep(600);
   const r1 = JSON.parse(await c.ev(`JSON.stringify({boxes:__sp.boxes.map(b=>b.kind), h:document.documentElement.scrollHeight, ctl:document.querySelector('.a-ctl').getBoundingClientRect().toJSON(), view:document.getElementById('view').getBoundingClientRect().toJSON(), hide:document.getElementById('hideCount').getBoundingClientRect().toJSON(), mode:document.getElementById('hideCount').parentElement.getBoundingClientRect().toJSON()})`));
   console.log('card1', JSON.stringify(r1));
-  await c.shot(path.join(OUT, '01-desktop-fill-' + D + '.png'), { x: 0, y: 0, width: 1000, height: Math.ceil(r1.mode.bottom + 16) });
+  await c.shot(path.join(OUT, '01-desktop-fill-' + D + '.png'), { x: 0, y: 0, width: 1000, height: Math.ceil(r1.mode.bottom + 8) });
   c.close();
   // Card2: 375px・ぼかし・手でなぞって1つ足した状態(別の画像)
   const m = await launch(9375);

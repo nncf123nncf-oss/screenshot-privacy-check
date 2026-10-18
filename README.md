@@ -9,6 +9,7 @@
 ## 開発用（source/）
 - `run-checks.js`: 検出・正規化・ぼかし・端末判定の検算（`node source/run-checks.js`）
 - `e2e-helpers.js` / `e2e-net.js`: 実ブラウザの検算（外部名前解決を止めた状態での通し・通信先の列挙）
+- `e2e-ui.js`: 画面まわりの実ブラウザ検算（注意の行数・拡大・2本指移動・一覧の折りたたみ・保存ボタンへの移動・番号丸のコントラスト）
 - `make_testdata.py` / `make_stress.py` / `make_dummy.py`: 架空のテスト画像（実在のメール・電話・氏名なし）
 - `shoot.js`: 投稿用の素材撮影（Chrome headless）
 
